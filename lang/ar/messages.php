@@ -1,0 +1,28 @@
+<?php
+
+return [
+    'retrieved_successfully' => 'تم جلب البيانات بنجاح',
+    'AddedMessage' => 'تمت الإضافة بنجاح',
+    'FetchedMessage' => 'تم جلب البيانات بنجاح',
+    'something_went_wrong' => 'حدث خطأ ما، يرجى المحاولة مرة أخرى',
+    'insufficient_balance' => 'الرصيد غير كافٍ',
+    'failed_to_retrieve' => 'فشل في جلب البيانات',
+    'not_found' => 'المورد غير موجود',
+    'deleted_successfully' => 'تم الحذف بنجاح',
+    'UpdatedMessage' => 'تم التحديث بنجاح',
+    'refund_success' => 'تم استرداد المبلغ بنجاح',
+    'unauthorized' => 'مستخدم غير مصرح به أو غير صالح',
+    'order_not_found' => 'الطلب غير موجود أو غير مصرح لك بالوصول إليه',
+    'order_created' => 'تم إنشاء الطلب بنجاح',
+    'order_finished' => 'تم إكمال الطلب بنجاح',
+    'validation_errors' => 'أخطاء في التحقق من البيانات',
+    'account_blocked' => 'حسابك محظور أو غير نشط',
+    'restricted_day' => 'محاولة طلب وقود في يوم غير مسموح به',
+    'something_wrong' => 'حدث خطأ ما، يرجى المحاولة لاحقاً',
+    'driver_id_required' => 'يجب اختيار السائق',
+    'fuel_id_required' => 'يجب اختيار نوع الوقود',
+    'vehicle_id_required' => 'يجب اختيار المركبة',
+    'quantity_required' => 'يجب إدخال كمية الوقود',
+    'total_price_required' => 'يجب إدخال السعر الإجمالي',
+    'odometer_image_type' => 'يجب أن تكون صورة العداد من صيغة صور صالحة',
+];

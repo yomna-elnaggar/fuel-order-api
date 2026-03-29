@@ -1,0 +1,28 @@
+<?php
+
+return [
+    'retrieved_successfully' => 'Retrieved successfully',
+    'AddedMessage' => 'Added successfully',
+    'FetchedMessage' => 'Fetched successfully',
+    'something_went_wrong' => 'Something went wrong',
+    'insufficient_balance' => 'Insufficient balance',
+    'failed_to_retrieve' => 'Failed to retrieve data',
+    'not_found' => 'Resource not found',
+    'deleted_successfully' => 'Deleted successfully',
+    'UpdatedMessage' => 'Updated successfully',
+    'refund_success' => 'Refund processed successfully',
+    'unauthorized' => 'Unauthorized or invalid user',
+    'order_not_found' => 'Order not found or unauthorized',
+    'order_created' => 'Order created successfully',
+    'order_finished' => 'Order finished successfully',
+    'validation_errors' => 'Validation errors',
+    'account_blocked' => 'Your account is blocked or inactive',
+    'restricted_day' => 'Fuel order attempt on a restricted day',
+    'something_wrong' => 'Something went wrong, please try again later',
+    'driver_id_required' => 'The driver is required',
+    'fuel_id_required' => 'The fuel type is required',
+    'vehicle_id_required' => 'The vehicle is required',
+    'quantity_required' => 'The fuel quantity is required',
+    'total_price_required' => 'The total price is required',
+    'odometer_image_type' => 'The odometer image must be a valid image file',
+];
