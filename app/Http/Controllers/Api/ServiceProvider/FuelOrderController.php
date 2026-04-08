@@ -28,44 +28,15 @@ use Carbon\Carbon;
 class FuelOrderController extends Controller
 {
     /**
-     * Helper to get employee/user details from request.
+     * Helper to get authenticated service provider details from request.
      */
-    private function getServiceProvider(Request $request)
-    {
-        $providerId = $request->user_id;
-
-        if (!$providerId)
-            return null;
-
-
-        $service = new ServiceProviderService();
-        $provider = $service->getUser($providerId);
-
-        if (!$provider) {
-            return null;
-        }
-
-        $provider['userType'] = (object) ['id' => $provider['user_type_id'] ?? null];
-
-        $serviceProviderObject = (object) $provider;
-
-        if (!($serviceProviderObject->userType->id == 1 || $serviceProviderObject->userType->id == 2)) {
-            Log::warning('Unauthorized User Type attempt', ['user_id' => $providerId, 'user_type' => $serviceProviderObject->userType->id]);
-            return null;
-        } 
-
-        return $serviceProviderObject;
-    }
-
     public function scanQRForVehicles(Request $request)
     {
         Log::info('scanQRForVehicles called');
-        Log::info($request->all());
 
-        $userId = $request->user_id;
-        $service_provider = $this->getServiceProvider($request);
-        if (!$service_provider) {
-            return ApiController::respondWithError('Unauthorized or invalid user', null, 403);
+        $user = auth()->user();
+        if (!$user) {
+            return ApiController::respondWithError('Unauthorized', null, 401);
         }
 
         $request->validate(['qr_code' => 'required|string']);
@@ -84,17 +55,14 @@ class FuelOrderController extends Controller
 
     public function scanQRData(Request $request)
     {
-        Log::info('sacan qr data');
-        Log::info($request->all());
+        Log::info('scan qr data');
 
-        $userId = $request->user_id;
-        $service_provider = $this->getServiceProvider($request);
-        if (!$service_provider) {
-            Log::warning('Unauthorized access attempt', ['user_id' => $userId]);
-            return ApiController::respondWithError('Unauthorized or invalid user', null, 403);
+        $user = auth()->user();
+        if (!$user) {
+            return ApiController::respondWithError('Unauthorized', null, 401);
         }
 
-        Log::info('scanQRData called by user:', ['user_id' => $service_provider->id]);
+        Log::info('scanQRData called by user:', ['user_id' => $user->id]);
 
         $request->validate(['referance_number' => 'required|string']);
         Log::info('QR code validated:', ['referance_number' => $request->referance_number]);
@@ -135,18 +103,16 @@ class FuelOrderController extends Controller
     public function createFuelOrder(CreateFuelOrderRequest $request)
     {
         Log::info('create fuel order');
-        Log::info($request->all());
 
-        $userId = $request->user_id;
-        $service_provider = $this->getServiceProvider($request);
-        if (!$service_provider) {
-            return ApiController::respondWithError('Unauthorized or invalid user', null, 403);
+        $user = auth()->user();
+        if (!$user) {
+            return ApiController::respondWithError('Unauthorized', null, 401);
         }
 
-        // Extract IDs from the user (Employee) record
-        $service_provider_id = $service_provider->service_provider_id;
-        $employee_id = $service_provider->id;
-        $branch_id = $service_provider->service_branch_id;
+        // Extract IDs from the authenticated user
+        $service_provider_id = $user->service_provider_id;
+        $employee_id = $user->id;
+        $branch_id = $user->service_branch_id;
 
         $validatedData = $request->validated();
 
@@ -218,18 +184,16 @@ class FuelOrderController extends Controller
 
     public function index(Request $request)
     {
-        Log::emergency('!!! CRITICAL DEBUG: WORKING ON THE RIGHT FILE !!!');
-        $service_provider = $this->getServiceProvider($request);
-        if (!$service_provider) {
-            return ApiController::respondWithError('Unauthorized or invalid user', null, 403);
+        $user = auth()->user();
+        if (!$user) {
+            return ApiController::respondWithError('Unauthorized', null, 401);
         }
 
         $perPage = $request->get('per_page', 15);
         $filters = $request->all();
-        unset($filters['user_id']);
 
-        $filters['employee_id'] = $service_provider->id;
-        $filters['service_provider_id'] = $service_provider->service_provider_id;
+        $filters['employee_id'] = $user->id;
+        $filters['service_provider_id'] = $user->service_provider_id;
 
         $orders = FuelOrder::filter($filters)->latest()->paginate($perPage);
 
@@ -238,13 +202,12 @@ class FuelOrderController extends Controller
 
     public function show(Request $request, $orderId)
     {
-        $userId = $request->user_id;
-        $service_provider = $this->getServiceProvider($request);
-        if (!$service_provider) {
-            return ApiController::respondWithError('Unauthorized or invalid user', null, 403);
+        $user = auth()->user();
+        if (!$user) {
+            return ApiController::respondWithError('Unauthorized', null, 401);
         }
 
-        $order = FuelOrder::where('service_provider_id', $service_provider->service_provider_id)->find($orderId);
+        $order = FuelOrder::where('service_provider_id', $user->service_provider_id)->find($orderId);
 
         if (!$order) {
             return ApiController::respondWithError('Order not found or unauthorized', null, 404);
@@ -255,15 +218,13 @@ class FuelOrderController extends Controller
 
     public function receiveOrder(Request $request)
     {
-        $userId = $request->user_id;
         Log::info('--- Start receiveOrder Process ---', ['request' => $request->all()]);
 
-        $service_provider = $this->getServiceProvider($request);
-        if (!$service_provider) {
-            Log::warning('Unauthorized access attempt', ['user_id' => $userId]);
-            return ApiController::respondWithError('Unauthorized or invalid user', null, 403);
+        $user = auth()->user();
+        if (!$user) {
+            return ApiController::respondWithError('Unauthorized', null, 401);
         }
-        Log::info('Service Provider authenticated', ['id' => $service_provider->id, 'user_type' => $service_provider->userType->id ?? 'N/A']);
+        Log::info('Service Provider authenticated', ['id' => $user->id, 'user_type' => $user->userType->id ?? 'N/A']);
 
         $validator = Validator::make($request->all(), [
             'reference_number' => 'required|string|exists:fuel_orders,reference_number',
@@ -359,16 +320,16 @@ class FuelOrderController extends Controller
         }
 
         $order->status = 2;
-        if ($service_provider->userType->id == 2) {
-            $order->branch_id = $service_provider->service_branch_id;
-            $order->service_provider_id = $service_provider->service_provider_id;
-            $order->employee_id = $service_provider->id;
+        if ($user->userType->id == 2) {
+            $order->branch_id = $user->service_branch_id;
+            $order->service_provider_id = $user->service_provider_id;
+            $order->employee_id = $user->id;
         }
 
         $order->save();
         Log::info('--- receiveOrder Completed Successfully ---', ['order_id' => $order->id]);
 
-        $otp = $this->createOtp($order, $service_provider->service_provider_id, $driver, $companySettings);
+        $otp = $this->createOtp($order, $user->service_provider_id, $driver, $companySettings);
 
         return ApiController::respondWithSuccess('Order received successfully', [
             'order' => new FuelOrderResource($order),
@@ -378,10 +339,9 @@ class FuelOrderController extends Controller
 
     public function completeOrder(Request $request)
     {
-        $userId = $request->user_id;
-        $service_provider = $this->getServiceProvider($request);
-        if (!$service_provider) {
-            return ApiController::respondWithError('Unauthorized or invalid user', null, 403);
+        $user = auth()->user();
+        if (!$user) {
+            return ApiController::respondWithError('Unauthorized', null, 401);
         }
 
         $validator = Validator::make($request->all(), [
@@ -432,7 +392,7 @@ class FuelOrderController extends Controller
                     'code' => $request->otp,
                     'expired_at' => now()->addMinutes(10),
                     'fuel_order_id' => $order->id,
-                    'service_provider_id' => $service_provider->service_provider_id,
+                    'service_provider_id' => $user->service_provider_id,
                     'user_id' => $order->user_id,
                 ]);
             }
@@ -452,7 +412,7 @@ class FuelOrderController extends Controller
             }
         }
 
-        DB::transaction(function () use ($order, $service_provider, $request, $companySettings) {
+        DB::transaction(function () use ($order, $user, $request, $companySettings) {
             $oldStatus = $order->status;
 
             // Update order details and status
@@ -463,10 +423,10 @@ class FuelOrderController extends Controller
             ];
 
             // Assign branch and provider info if it's a service provider employee (type 2)
-            if ($service_provider->userType->id == 2) {
-                $updateData['branch_id'] = $service_provider->service_branch_id;
-                $updateData['service_provider_id'] = $service_provider->service_provider_id;
-                $updateData['employee_id'] = $service_provider->id;
+            if ($user->userType->id == 2) {
+                $updateData['branch_id'] = $user->service_branch_id;
+                $updateData['service_provider_id'] = $user->service_provider_id;
+                $updateData['employee_id'] = $user->id;
             }
 
             // Handle odometer/vehicle image if uploaded at this stage
@@ -480,7 +440,7 @@ class FuelOrderController extends Controller
             OrderLog::create([
                 'fuel_order_id' => $order->id,
                 'user_id' => $order->user_id,
-                'employee_id' => $service_provider->id,
+                'employee_id' => $user->id,
                 'status' => Constants::CONFIRM_ORDER,
                 'old_status' => $oldStatus,
             ]);
@@ -517,10 +477,9 @@ class FuelOrderController extends Controller
 
     public function cancelOrder(Request $request)
     {
-        $userId = $request->user_id;
-        $service_provider = $this->getServiceProvider($request);
-        if (!$service_provider) {
-            return ApiController::respondWithError('Unauthorized or invalid user', null, 403);
+        $user = auth()->user();
+        if (!$user) {
+            return ApiController::respondWithError('Unauthorized', null, 401);
         }
 
         $validator = Validator::make($request->all(), [
@@ -532,9 +491,9 @@ class FuelOrderController extends Controller
         }
 
         $order = FuelOrder::where('reference_number', $request->reference_number)
-            ->where(function ($q) use ($service_provider) {
-                $q->where('service_provider_id', $service_provider->service_provider_id)
-                    ->orWhere('employee_id', $service_provider->id);
+            ->where(function ($q) use ($user) {
+                $q->where('service_provider_id', $user->service_provider_id)
+                    ->orWhere('employee_id', $user->id);
             })
             ->first();
 
@@ -550,10 +509,9 @@ class FuelOrderController extends Controller
 
     public function sendOtpToConfirmOrder(Request $request)
     {
-        $userId = $request->user_id;
-        $service_provider = $this->getServiceProvider($request);
-        if (!$service_provider) {
-            return ApiController::respondWithError('Unauthorized or invalid user', null, 403);
+        $user = auth()->user();
+        if (!$user) {
+            return ApiController::respondWithError('Unauthorized', null, 401);
         }
 
         $validator = Validator::make($request->all(), [
@@ -577,7 +535,7 @@ class FuelOrderController extends Controller
 
         $companySettings = (new CompanyService())->getCompanySettings($driver['company_id']);
 
-        $otp = $this->createOtp($order, $service_provider->service_provider_id, (array) $driver, $companySettings);
+        $otp = $this->createOtp($order, $user->service_provider_id, (array) $driver, $companySettings);
 
         return ApiController::respondWithSuccess('OTP generated successfully', ['otp' => $otp]);
     }

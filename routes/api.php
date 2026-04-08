@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\Driver\FuelOrderController as DriverFuelOrderController;
 use App\Http\Controllers\Api\ServiceProvider\FuelOrderController as ServiceProviderFuelOrderController;
+use App\Http\Controllers\Api\ServiceProvider\Dashboard\FuelOrderController as DashboardFuelOrderController;
 
 
 
@@ -39,11 +40,13 @@ Route::prefix('admin')->group(function () {
 
 // Company Routes
 Route::prefix('company')->group(function () {
+    Route::get('fuel-orders/stats', [\App\Http\Controllers\Api\Company\FuelOrderController::class, 'stats']);
     Route::apiResource('fuel-orders', \App\Http\Controllers\Api\Company\FuelOrderController::class);
 });
 
-// Service Provider Dashboard Routes
+// Service Provider external service Routes
 Route::prefix('service-provider/dashboard')->group(function () {
-    Route::apiResource('fuel-orders', \App\Http\Controllers\Api\ServiceProvider\Dashboard\FuelOrderController::class);
+    Route::get('fuel-orders/stats', [DashboardFuelOrderController::class, 'stats']);
+    Route::apiResource('fuel-orders', DashboardFuelOrderController::class);
 });
 

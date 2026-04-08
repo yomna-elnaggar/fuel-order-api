@@ -15,6 +15,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->api(append: [
             \App\Http\Middleware\LocalizationMiddleware::class,
         ]);
+        $middleware->alias([
+            'service_provider.auth' => \App\Http\Middleware\ServiceProviderAuth::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

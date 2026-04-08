@@ -81,4 +81,31 @@ class FuelOrderController extends ApiController
             ]
         ]);
     }
+
+    /**
+     * Get statistics for the dashboard.
+     */
+    public function stats(Request $request)
+    {
+        $provider_id = $request->service_provider_id;
+        if (!$provider_id) {
+            return ApiController::respondWithError('Service Provider identification missing', null, 403);
+        }
+
+        $query = FuelOrder::confirmed()->where('service_provider_id', $provider_id);
+
+        $noTotalOrders = (clone $query)->count();
+        $noTotalFuelOrders = (clone $query)->count();
+        $totalOrdersAmount = (clone $query)->sum('total_price');
+        $noTodayFuelOrders = (clone $query)->whereDate('created_at', \Carbon\Carbon::today())->count();
+        $lastOrders = (clone $query)->Received()->latest()->take(10)->get();
+
+        return ApiController::respondWithSuccess('Service provider statistics retrieved', [
+            'noTotalOrders' => (int)$noTotalOrders,
+            'noTotalFuelOrders' => (int)$noTotalFuelOrders,
+            'totalOrdersAmount' => (float)$totalOrdersAmount,
+            'noTodayFuelOrders' => (int)$noTodayFuelOrders,
+            'lastOrders' => $lastOrders
+        ]);
+    }
 }

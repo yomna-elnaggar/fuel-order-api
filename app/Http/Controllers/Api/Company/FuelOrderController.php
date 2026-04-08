@@ -111,4 +111,31 @@ class FuelOrderController extends ApiController
             ]
         ]);
     }
+
+    /**
+     * Get vehicle fuel orders statistics (daily, weekly, monthly) and history.
+     */
+    public function stats(Request $request)
+    {
+        $vehicle_id = $request->vehicle_id;
+        if (!$vehicle_id) {
+            return ApiController::respondWithError('Vehicle ID is required', null, 422);
+        }
+
+        $query = FuelOrder::where('vehicle_id', $vehicle_id)
+            ->where('status', Constants::CONFIRM_ORDER);
+
+        $daily = (clone $query)->whereDate('created_at', now()->toDateString())->sum('total_price');
+        $weekly = (clone $query)->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->sum('total_price');
+        $monthly = (clone $query)->whereMonth('created_at', now()->month)->whereYear('created_at', now()->year)->sum('total_price');
+
+        $orders = (clone $query)->latest()->limit(10)->get(['created_at', 'quantity', 'total_price']);
+
+        return ApiController::respondWithSuccess('Vehicle statistics retrieved', [
+            'daily' => (float)$daily,
+            'weekly' => (float)$weekly,
+            'monthly' => (float)$monthly,
+            'orders' => $orders
+        ]);
+    }
 }
