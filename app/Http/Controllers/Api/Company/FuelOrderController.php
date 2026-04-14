@@ -70,8 +70,30 @@ class FuelOrderController extends ApiController
         $providersRaw = (new ServiceProviderService())->getServiceProviders();
         $service_providers = is_array($providersRaw) ? ($providersRaw['items'] ?? $providersRaw) : [];
 
+        $mappedItems = collect($items->items())->map(function ($item) use ($drivers, $vehicles, $branches, $service_providers) {
+            $mapped = is_array($item) ? $item : $item->toArray();
+            
+            $user = collect($drivers)->firstWhere('id', $mapped['user_id']) ?? null;
+            $vehicle = collect($vehicles)->firstWhere('id', $mapped['vehicle_id']) ?? null;
+            $branch = collect($branches)->firstWhere('id', $mapped['branch_id']) ?? null;
+            $sp = collect($service_providers)->firstWhere('id', $mapped['service_provider_id']) ?? null;
+            
+            $mapped['user'] = $user;
+            $mapped['vehicle'] = $vehicle;
+            $mapped['branch'] = $branch;
+            $mapped['service_provider'] = $sp;
+            
+            // map flat properties for the view
+            $mapped['name'] = $user['name'] ?? null;
+            $mapped['service_provider_name'] = $sp['name'] ?? null;
+            $mapped['plate_letters'] = $vehicle['plate_letters'] ?? null;
+            $mapped['plate_numbers'] = $vehicle['plate_numbers'] ?? null;
+            
+            return $mapped;
+        });
+
         return ApiController::respondWithSuccess('Company dashboard data retrieved', [
-            'items' => $items->items(),
+            'items' => $mappedItems,
             'pagination' => ApiController::formatPagination($items),
             'metadata' => [
                 'drivers' => $drivers,
