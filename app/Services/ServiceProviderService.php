@@ -11,7 +11,7 @@ class ServiceProviderService extends BaseService
 
     public function getServiceProvider($id)
     {
-        return $this->get("service-providers/{$id}");
+        return $this->get("service-providers/service/{$id}");
     }
 
     public function getBranch($id)

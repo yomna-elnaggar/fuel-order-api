@@ -11,16 +11,16 @@ class DriverService extends BaseService
 
     public function getDriver($id)
     {
-        return $this->get("drivers/{$id}");
+        return $this->get("drivers/service/{$id}");
     }
 
     public function getDrivers()
     {
-        return $this->get("drivers");
+        return $this->get("drivers/service");
     }
 
     public function getDriversByCompany($companyId)
     {
-        return $this->get("drivers", ['company_id' => $companyId, 'limit' => 'all']);
+        return $this->get("drivers/service", ['company_id' => $companyId, 'limit' => 'all']);
     }
 }

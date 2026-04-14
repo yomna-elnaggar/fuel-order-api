@@ -56,19 +56,19 @@ class FuelOrderController extends ApiController
 
         // Fetch Metadata for Filters (Matching Legacy Result)
         $fuelsRaw = (new BasicService())->getFuels();
-        $fuels = $fuelsRaw['items'] ?? $fuelsRaw ?? [];
+        $fuels = is_array($fuelsRaw) ? ($fuelsRaw['items'] ?? $fuelsRaw) : [];
 
         $branchesRaw = (new CompanyService())->getCompanyBranches($company_id);
-        $branches = $branchesRaw['items'] ?? $branchesRaw ?? [];
+        $branches = is_array($branchesRaw) ? ($branchesRaw['items'] ?? $branchesRaw) : [];
 
         $vehiclesRaw = (new VehicleService())->getVehiclesByCompany($company_id);
-        $vehicles = $vehiclesRaw['items'] ?? $vehiclesRaw ?? [];
+        $vehicles = is_array($vehiclesRaw) ? ($vehiclesRaw['items'] ?? $vehiclesRaw) : [];
 
         $driversRaw = (new DriverService())->getDriversByCompany($company_id);
-        $drivers = $driversRaw['items'] ?? $driversRaw ?? [];
+        $drivers = is_array($driversRaw) ? ($driversRaw['items'] ?? $driversRaw) : [];
 
         $providersRaw = (new ServiceProviderService())->getServiceProviders();
-        $service_providers = $providersRaw['items'] ?? $providersRaw ?? [];
+        $service_providers = is_array($providersRaw) ? ($providersRaw['items'] ?? $providersRaw) : [];
 
         return ApiController::respondWithSuccess('Company dashboard data retrieved', [
             'items' => $items->items(),

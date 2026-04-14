@@ -11,11 +11,11 @@ class VehicleService extends BaseService
 
     public function getVehicle($id)
     {
-        return $this->get("vehicles/{$id}");
+        return $this->get("vehicles/service/{$id}");
     }
 
     public function getVehiclesByCompany($companyId)
     {
-        return $this->get("vehicles", ['company_id' => $companyId, 'limit' => 'all']);
+        return $this->get("vehicles/service", ['company_id' => $companyId, 'limit' => 'all']);
     }
 }
